@@ -3,4 +3,25 @@ steps:
   - label: 'do not panic cherry_blossom::whale:'
     command: 'echo hello, enginneer'
     agents:
-      queue: sab-sit-dflt
+      queue: sab-test-dflt
+
+  - wait
+
+  - label: ':cloudformation: :amazon-rds: Deploy to TEST env'
+    commands:
+      - docker-compose run build
+      - docker-compose run serverless deploy -s test -v
+      - .buildkite/db-migration.sh test
+      - release test # add the release command like release to aws...
+    branches: 'master'
+    agents:
+      queue: sab-test-dflt
+
+  - wait
+
+  - label: ':cloudformation: :amazon-rds: Deploy to PROD env'
+    commands:
+      - docker-compose run build
+      - docker-compose run serverless deploy -s prod -v
+      - .buildkite/db-migration.sh prod
+      - release prod # add the release command like release to aws...
